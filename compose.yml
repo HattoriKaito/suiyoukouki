@@ -1,0 +1,49 @@
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./public/:/var/www/public/
+      - image_data:/var/www/public/image/
+    depends_on:
+      - php
+
+  php:
+    container_name: php
+    build:
+      context: .
+      target: php
+    volumes:
+      - ./public/:/var/www/public/
+      - image_data:/var/www/public/image/
+    environment:
+      PHP_SESSION_SAVE_HANDLER: redis
+      PHP_SESSION_SAVE_PATH: "tcp://redis:6379"
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: example_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      TZ: Asia/Tokyo
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: >
+      mysqld
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max_allowed_packet=4MB
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+volumes:
+  mysql_data:
+  image_data:
+
